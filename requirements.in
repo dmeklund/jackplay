@@ -1,0 +1,8 @@
+JACK-client
+ipython
+ipdb
+numpy
+matplotlib
+pyqtgraph
+pip-tools
+pyside
