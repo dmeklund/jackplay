@@ -6,3 +6,5 @@ matplotlib
 pyqtgraph
 pip-tools
 pyside
+scipy
+h5py

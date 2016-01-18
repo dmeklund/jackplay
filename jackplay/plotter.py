@@ -11,6 +11,8 @@ class QtPlotter(object):
         self._win = pg.GraphicsWindow(title="JackPlay Plotter")
         self._win.setWindowTitle("JackPlay Plotter")
         self._plots = dict()
+        self._images = dict()
+
         pg.setConfigOptions(antialias=True)
 
     def add_plot(self, plot_id, plot_title, data_source):
@@ -29,6 +31,26 @@ class QtPlotter(object):
 
         self._plots[plot_id] = (plt, curve, data_source, timer, minval, maxval)
 
+    def add_image(self, image_id, image_title, data_source):
+        view = pg.ViewBox()
+        self._win.addItem(view)
+        img = pg.ImageItem(np.random.rand(10,10))
+        # simple colormap
+
+        # stops=np.r_[-1.0,-0.5,0.5,1.0]
+        # colors=np.array([[0,0,1,0.7],[0,1,0,0.2],[0,0,0,0.8],[1,0,0,1.0]])
+        # cm = pg.ColorMap(stops,colors)
+        # pos = np.array([0., 1., 0.5, 0.25, 0.75])
+        # color = np.array([[0,255,255,255], [255,255,0,255], [0,0,0,255], (0, 0, 255, 255), (255, 0, 0, 255)], dtype=np.ubyte)
+        # cmap = pg.ColorMap(pos, color)
+        # lut = cm.getLookupTable(0.0, 1.0, 256)
+        # img.setLookupTable(lut)
+        view.addItem(img)
+        timer = QtCore.QTimer()
+        timer.timeout.connect(partial(self._update_image, image_id))
+        timer.start(50)
+        self._images[image_id] = (img, data_source, timer,)
+
     def _update(self, plot_id):
         plt, curve, data_source, timer, minval, maxval = self._plots[plot_id]
         data = data_source()
@@ -37,6 +59,11 @@ class QtPlotter(object):
         curve.setData(data_source())
         plt.setYRange(minval, maxval)
         self._plots[plot_id] = plt, curve, data_source, timer, minval, maxval
+
+    def _update_image(self, image_id):
+        img, data_source, timer = self._images[image_id]
+        data = data_source()
+        img.setImage(data)
 
     def run(self):
         QtGui.QApplication.instance().exec_()
