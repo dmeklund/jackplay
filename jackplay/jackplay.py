@@ -10,7 +10,6 @@ import jack
 import numpy as np
 
 from functools import partial
-import threading
 import time
 
 max_storage_time_secs = 20
@@ -27,20 +26,22 @@ class JackPlay(object):
         self._client = jack.Client(client_name)
         self._plotter = QtPlotter()
         self._processor = SignalProcessor(self._client.samplerate, max_storage_time_secs, self._client.blocksize)
-        self._processor_modulate = SignalProcessor(self._client.samplerate, max_storage_time_secs, self._client.blocksize)
+        self._processor_modulate = SignalProcessor(
+            self._client.samplerate, max_storage_time_secs, self._client.blocksize)
         self._periodogram = PeriodogramComponent(self._processor, 1, self._client.samplerate)
         # self._filter = LowPassFilter(self._processor, 200, self._client.samplerate)
-        self._filter = components.VariableBandPassFilter(self._processor, self._processor_modulate, self._client.samplerate)
+        self._filter = components.VariableBandPassFilter(
+            self._processor, self._processor_modulate, self._client.samplerate)
         self._initialize()
 
     def _process(self, frames):
         """
-        Process callback when we have new data frames read from JACK. Read the data and pass them along to our
+        Process callback when we have new frames read from JACK. Read the data and pass them along to our
         signal processor(s).
         """
-        data_inport = self._client.inports[0] #'input_1']
-        modulate_inport = self._client.inports[1] #'input_2']
-        outport = self._client.outports[0] #'output_1']
+        data_inport = self._client.inports[0]  # input_1
+        modulate_inport = self._client.inports[1]  # input_2
+        outport = self._client.outports[0]  # output_1
         modulate = modulate_inport.get_array()
         if np.any(modulate):
             print("Got modulate data!")
@@ -64,7 +65,10 @@ class JackPlay(object):
         self._client.outports.register("output_1")
         self._plotter.add_plot("raw", "Raw Data", partial(self._processor.get_data, 0.05))
         self._plotter.add_plot("periodogram", "Periodogram", self._periodogram.get_periodogram)
-        self._plotter.add_image("spectrogram", "Spectrogram", SpectrogramComponent(self._processor, 10, self._client.samplerate).get_spectrogram)
+        self._plotter.add_image(
+            "spectrogram",
+            "Spectrogram",
+            SpectrogramComponent(self._processor, 10, self._client.samplerate).get_spectrogram)
 
     def run(self):
         """
